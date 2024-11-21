@@ -47,4 +47,11 @@ public class Goods {
 		", 재고: " + this.countStock);
 		
 	}
+	
+	public int calcDiscountPrice(float discountRate) {
+		// 지역변수는 꼭 초기화
+		int result = (int) (price - price * discountRate);
+		
+		return result;
+	}
 }

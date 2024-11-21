@@ -24,11 +24,13 @@ public class GoodsApp {
 		
 		goods.printInfo();
 		
-		
 		Goods goods2 = new Goods();
 		Goods goods3 = new Goods();
 		
 		System.out.println(Goods.countOfGoods);
+		
+		goods.setPrice(400000);
+		System.out.println(goods.calcDiscountPrice(0.5f));
 	}
 
 }
