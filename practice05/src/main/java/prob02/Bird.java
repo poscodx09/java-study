@@ -10,4 +10,14 @@ public abstract class Bird {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public void fly() {
+	}
+
+	public void sing() {
+	}
+	
+    public String toString() {
+    	return "이름은 " + name + "입니다.";
+    }
 }
