@@ -1,4 +1,5 @@
 package chat.gui;
+
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Color;
@@ -13,21 +14,41 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.Scanner;
+
+import chat.ChatClientThread;
 
 public class ChatWindow {
+	private static final String SERVER_IP = "127.0.0.1";
+	private static final int SERVER_PORT = 9999;
 
 	private Frame frame;
 	private Panel pannel;
 	private Button buttonSend;
 	private TextField textField;
 	private TextArea textArea;
+	
+	private String nickname;
+	private Socket socket;
+	private PrintWriter writer;
+	private BufferedReader reader;
 
 	public ChatWindow(String name) {
+		this.nickname = name;
 		frame = new Frame(name);
 		pannel = new Panel();
 		buttonSend = new Button("Send");
 		textField = new TextField();
 		textArea = new TextArea(30, 80);
+	
 	}
 
 	public void show() {
@@ -69,28 +90,45 @@ public class ChatWindow {
 		// Frame
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
+				finish();
 				System.exit(0);
 			}
 		});
 		frame.setVisible(true);
 		frame.pack();
 		
-		// 1. 서버 여녀결 작업
-		// 2. IO Stream Set
-		// 3. JOIN Protocol
-		// 4. Chat Client Thread 생성
+
+        try {
+            // 1. 소켓 연결
+            socket = new Socket("127.0.0.1", 9999);
+
+            // 2. 스트림 설정
+            writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+
+            // 3. JOIN 프로토콜 전송
+            writer.println("join:" + nickname);
+
+            // 4. ChatClientThread 시작
+            new ChatClientThread().start();
+
+        } catch (IOException e) {
+            System.out.println("서버 연결 실패: " + e.getMessage());
+            finish();
+        }
 		
 	}
 	
 	private void sendMessage() {
 		String message = textField.getText();
-		System.out.println("메시지를 보내는 프로토콜 구현!: " + message);
-		
+		if (message.isEmpty()) {
+	            return;
+	    }
+
+	    writer.println("message:" + message); // 서버로 메시지 전송
+	        
 		textField.setText("");
 		textField.requestFocus();
-		
-		// ChatClientThread에서 서버로부터 받은 메세지가 있다고 치고~
-		updateTextArea("아무개: " + message);
 	}
 	
 	private void updateTextArea(String message) {
@@ -100,15 +138,37 @@ public class ChatWindow {
 	
 	private void finish() {
 		// quit protocol 구현
-		
 		// exit java application
+		try {
+            if (writer != null) {
+                writer.println("quit:" + nickname + "님이 퇴장했습니다.");
+                writer.flush();
+            }
+            
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        } catch (IOException e) {
+            System.out.println("소켓 종료 중 오류: " + e.getMessage());
+        } finally {
+            System.exit(0);
+        }
 		System.exit(0);
 	}
 	
 	private class ChatClientThread extends Thread{
-		@Override
-		public void run() {
-			updateTextArea("....");
-		}
+        @Override
+        public void run() {
+            try {
+                String msg;
+                while ((msg = reader.readLine()) != null) {
+                    updateTextArea(msg); // 서버로부터 받은 메시지 출력
+                }
+            } catch (IOException e) {
+                System.out.println("서버와의 연결 종료: " + e.getMessage());
+                finish();
+            }
+        }
 	}
+
 }
