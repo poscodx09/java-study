@@ -48,8 +48,6 @@ public class ChatServerThread extends Thread {
 				}
 			}
 			
-
-
 		} catch (SocketException e) {
 			System.out.println("[ServerError]: " + e);
 		} catch (IOException e) {
