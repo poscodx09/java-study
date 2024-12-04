@@ -100,7 +100,8 @@ public class ChatWindow {
 
         try {
             // 1. 소켓 연결
-            socket = new Socket("127.0.0.1", 9999);
+            socket = new Socket();
+			socket.connect(new InetSocketAddress(SERVER_IP, SERVER_PORT));
 
             // 2. 스트림 설정
             writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);

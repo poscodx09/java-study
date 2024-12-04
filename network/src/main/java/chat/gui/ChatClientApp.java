@@ -1,5 +1,4 @@
 package chat.gui;
-import java.net.Socket;
 import java.util.Scanner;
 
 public class ChatClientApp {
